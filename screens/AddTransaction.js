@@ -1,14 +1,10 @@
 import { Dropdown } from 'react-native-element-dropdown';
-import React, { useLayoutEffect } from 'react'
-import { Alert, Button, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import { Icon } from 'react-native-ui-lib'
+import React from 'react'
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Spinner } from '@gluestack-ui/themed';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
 import { updateCategoriesForUsers, updateTransactionsForUsers } from '../services/userService';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-const addIconImage = require('../assets/add-icon.png');
 
 function AddTransaction({ route }) {
     const [categories, onChangeCategories] = React.useState(route.params.categories);

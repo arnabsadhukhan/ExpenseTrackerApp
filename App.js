@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageBackground, StyleSheet, Text, View, SafeAreaView, StatusBar, ScrollView, Button, Pressable, Alert } from 'react-native';
+import { Pressable, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import HomePage from './screens/HomePage';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,7 +10,6 @@ import { AntDesign } from '@expo/vector-icons';
 import { auth, logOutUser } from './firebase';
 import Transactions from './screens/Transactions';
 const Stack = createNativeStackNavigator();
-const image = { uri: 'https://legacy.reactjs.org/logo-og.png' };
 
 const globalHeaderConfig = {
   headerStyle: {
@@ -21,7 +20,6 @@ const globalHeaderConfig = {
     fontWeight: 'bold',
   },
 }
-
 
 export default App = () => (
   <NavigationContainer>

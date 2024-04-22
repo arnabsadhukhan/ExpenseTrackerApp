@@ -1,15 +1,10 @@
 import React, { useLayoutEffect } from 'react'
-import { Button, KeyboardAvoidingView, StyleSheet, Text, TextInput, View, Pressable, Image, Alert, StatusBar } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Button, KeyboardAvoidingView, StyleSheet, Text, TextInput, View, Alert, StatusBar } from 'react-native'
 import { auth, createNewuser, loginUser } from '../firebase';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { setDataForUsers } from '../services/userService';
 import { Spinner } from '@gluestack-ui/themed';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
-const googleImage = require('../assets/google-logo.jpg');
 
 function LoginScreen({ navigation }) {
     const [showLoading, onChangeShowLoading] = React.useState(false);

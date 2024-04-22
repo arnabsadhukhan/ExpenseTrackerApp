@@ -1,12 +1,10 @@
 import React from 'react'
-import { Alert, Button, FlatList, Image, Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Category from './components/Category';
 import { updateCategoriesForUsers, updateTransactionsForUsers } from '../services/userService';
 import { Spinner } from '@gluestack-ui/themed';
 import { AntDesign, Entypo, Feather, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-const addIconImage = require('../assets/add-icon.png');
 
 function AddCategories({ route }) {
     const [categories, onChangeCategories] = React.useState(route.params.categories);

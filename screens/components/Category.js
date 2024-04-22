@@ -1,14 +1,12 @@
-import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons'
+import { Feather, MaterialIcons } from '@expo/vector-icons'
 import React from 'react'
-import { Button, View, Text, TouchableOpacity } from 'react-native'
-
+import { Button, View, Text } from 'react-native'
 
 function Category({ categoryName, amountVisible, amount, onPressCategory }) {
     return (
 
         <View className="bg-[#1D267D] p-4 my-2" style={{ borderRadius: 20 }}>
             <View className="flex-row justify-center items-center p-2">
-
                 <MaterialIcons name="account-balance" size={24} color="white" />
                 < Text className=" text-2xl text-white font-extrabold pl-1 " >
                     {categoryName}

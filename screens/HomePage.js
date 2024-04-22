@@ -1,6 +1,6 @@
-import React, { useEffect, useLayoutEffect } from 'react'
+import React, { useLayoutEffect } from 'react'
 import { View, Text, } from 'react-native-ui-lib';
-import { ScrollView, Button, Image, Pressable, Alert, Modal } from 'react-native';
+import { ScrollView, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Category from './components/Category';
 import { auth, db } from '../firebase';

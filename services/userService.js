@@ -1,4 +1,4 @@
-import { collection, addDoc, doc, setDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
 export async function setDataForUsers(userId, data = [], transaction = []) {
