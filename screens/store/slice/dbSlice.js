@@ -3,7 +3,9 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
     categories: [],
-    transactions: []
+    transactions: [],
+    expenses: [],
+    incomeAmount: 0
 };
 
 let updateCategoriesAmountHold = (categories, categoryAmountHoldMapping) => {
@@ -41,6 +43,10 @@ const dbSlice = createSlice({
             let newCategories = updateCategoriesAmountHold(state.categories, categoryAmountHoldMapping);
             state.categories = newCategories;
         },
+        setExpenses: (state, action) => {
+            state.incomeAmount = action.payload.incomeAmount;
+            state.expenses = action.payload.expenses;
+        },
         updateTransactions: (state, action) => {
             let categoryAmountHoldMapping = {};
             state.transactions.forEach((transaction) => {
@@ -57,5 +63,5 @@ const dbSlice = createSlice({
     },
 });
 
-export const { setUser, setCategories, setTransactions, updateTransactions } = dbSlice.actions;
+export const { setUser, setCategories, setTransactions, updateTransactions, setExpenses } = dbSlice.actions;
 export default dbSlice.reducer;

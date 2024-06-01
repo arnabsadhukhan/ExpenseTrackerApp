@@ -1,13 +1,13 @@
 import React, { useLayoutEffect } from 'react'
 import { KeyboardAvoidingView, StyleSheet, Text, TextInput, View, Alert, StatusBar, TouchableOpacity } from 'react-native'
 import { auth, createNewuser, loginUser } from '../firebase';
-import { getCategoriesForUsers, getTransactionsForUsers, setDataForUsers } from '../services/userService';
+import { getCategoriesForUsers, getExpenseListForUsers, getTransactionsForUsers, setDataForUsers } from '../services/userService';
 import { Spinner } from '@gluestack-ui/themed';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from './store/slice/appSlice';
-import { setCategories, setTransactions } from './store/slice/dbSlice';
+import { setCategories, setExpenses, setTransactions } from './store/slice/dbSlice';
 
 function LoginScreen({ navigation }) {
     const dispatch = useDispatch();
@@ -27,11 +27,15 @@ function LoginScreen({ navigation }) {
                     getCategoriesForUsers(userId, (userCategories) => {
                         dispatch(setCategories(userCategories.categories));
                         getTransactionsForUsers(userId, (userTransactions) => {
-                            dispatch(setTransactions(userTransactions.transactions))
-                            onChangeShowLoading(false);
-                            navigation.reset({
-                                index: 0,
-                                routes: [{ name: "Home" }]
+                            dispatch(setTransactions(userTransactions.transactions));
+
+                            getExpenseListForUsers(userId, (expenseData) => {
+                                dispatch(setExpenses(expenseData));
+                                onChangeShowLoading(false);
+                                navigation.reset({
+                                    index: 0,
+                                    routes: [{ name: "Home" }]
+                                })
                             })
                         }, (err) => {
                             Alert.alert(err);

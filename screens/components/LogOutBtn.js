@@ -5,7 +5,7 @@ import { AntDesign } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../store/slice/appSlice';
 import { useNavigation } from '@react-navigation/native';
-import { setCategories, setTransactions } from '../store/slice/dbSlice';
+import { setCategories, setExpenses, setTransactions } from '../store/slice/dbSlice';
 
 function LogOutBtn() {
     const dispatch = useDispatch();
@@ -16,6 +16,7 @@ function LogOutBtn() {
                 dispatch(setUser(null));
                 dispatch(setTransactions([]))
                 dispatch(setCategories([]))
+                dispatch(setExpenses({ incomeAmount: 0, expenses: [] }))
                 navigation.reset({
                     index: 0,
                     routes: [{ name: "Login" }]

@@ -14,6 +14,7 @@ import { Provider, useDispatch } from 'react-redux';
 import store from './screens/store/store';
 import { setUser } from './screens/store/slice/dbSlice';
 import LogOutBtn from './screens/components/LogOutBtn';
+import MonthlyExpenseScreen from './screens/MonthlyExpenseScreen';
 const Stack = createNativeStackNavigator();
 
 const globalHeaderConfig = {
@@ -49,6 +50,9 @@ export default App = () => {
             options={globalHeaderConfig} />
           <Stack.Screen name="Transactions" component={Transactions}
             options={globalHeaderConfig} />
+          <Stack.Screen name="Monthly Expense" component={MonthlyExpenseScreen}
+            options={globalHeaderConfig} />
+
         </Stack.Navigator>
 
 

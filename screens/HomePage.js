@@ -5,7 +5,7 @@ import { Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Category from './components/Category';
 import { Spinner } from '@gluestack-ui/themed';
-import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { setCategories, setTransactions } from './store/slice/dbSlice';
 import { getCategoriesForUsers, getTransactionsForUsers } from '../services/userService';
@@ -62,6 +62,13 @@ function HomePage({ navigation }) {
                     });
                 }}>
                     <MaterialIcons name="currency-exchange" size={24} color="black" />
+                </TouchableOpacity >
+                <TouchableOpacity onPress={() => {
+                    navigation.navigate('Monthly Expense', {
+                        categories, userId: userId, transactions
+                    });
+                }}>
+                    <FontAwesome6 name="list-check" size={24} color="black" />
                 </TouchableOpacity >
             </View >
         </View >

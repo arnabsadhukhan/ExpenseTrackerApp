@@ -4,6 +4,7 @@ import { db } from "../firebase";
 const COLLECTIONS = {
     CATEGORIES: "user-categories",
     TRANSACTIONS: "user-transactions",
+    EXPENSELIST: "user-expense-list",
     LOGS: "user-log"
 }
 
@@ -44,6 +45,10 @@ export async function setDataForUsers(userId, successCallback = () => { }, error
         await setDoc(doc(db, COLLECTIONS.TRANSACTIONS, userId), {
             transactions: []
         });
+        await setDoc(doc(db, COLLECTIONS.EXPENSELIST, userId), {
+            incomeAmount: 0,
+            expenses: []
+        });
         successCallback();
         console.log("SET DATA FOR NEW USER SUCCESSFUL...");
     } catch (e) {
@@ -65,7 +70,6 @@ export async function updateCategoriesForUsers(userId, data, successCallback = (
         console.error("FAILED To set New Categories data for users ->  ", e);
         errorCallback("Failed To Update categories");
     }
-
 };
 
 export async function updateTransactionsForUsers(userId, data, successCallback = () => { }, errorCallback = () => { }) {
@@ -83,6 +87,21 @@ export async function updateTransactionsForUsers(userId, data, successCallback =
 
 };
 
+export async function updateExpensesForUsers(userId, data, successCallback = () => { }, errorCallback = () => { }) {
+    try {
+        data.expenses = data.expenses.map((category, index) => { category.id = index; return category });
+        let savePayload = data;
+        await setDoc(doc(db, COLLECTIONS.EXPENSELIST, userId), {
+            categories: savePayload
+        });
+        await updateDBLog(userId, COLLECTIONS.CATEGORIES, savePayload);
+        successCallback(savePayload);
+        console.log("UPDATE EXPENSES FOR USER SUCCESSFUL...");
+    } catch (e) {
+        console.error("FAILED To set New Expeses data for users ->  ", e);
+        errorCallback("Failed To Update Expeses");
+    }
+};
 export async function deleteTransaction(userId, deleteTransactionDateId, successCallback = () => { }, errorCallback = () => { }) {
     let collectionName = COLLECTIONS.TRANSACTIONS;
     let documentId = userId;
@@ -162,5 +181,24 @@ export async function getTransactionsForUsers(userId, successCallback = () => { 
     } catch (e) {
         console.error("FAILED TO GET USER transactions ->  ", e);
         errorCallback("Failed To Retrieve Transactions");
+    }
+};
+export async function getExpenseListForUsers(userId, successCallback = () => { }, errorCallback = () => { }) {
+    const docRef = doc(db, COLLECTIONS.EXPENSELIST, userId);
+    const docSnap = await getDoc(docRef);
+    let userInfo = []
+    try {
+        if (docSnap.exists()) {
+            userInfo = docSnap.data();
+            successCallback(userInfo);
+            console.log("GET EXPENSE LIST FOR USER SUCCESSFUL...");
+        } else {
+            console.error("FAILED TO GET EXPENSE LIST INFO ->  ");
+            errorCallback("Failed To Retrieve Expenses - User Doesn`t Exist");
+        }
+        return userInfo;
+    } catch (e) {
+        console.error("FAILED TO GET USER EXPENSE LIST ->  ", e);
+        errorCallback("Failed To Retrieve Expenses");
     }
 };
