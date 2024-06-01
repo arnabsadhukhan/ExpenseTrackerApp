@@ -16,14 +16,23 @@ async function updateDBLog(userId, type, data) {
         });
         console.log("LOG UPDATED...");
     } catch (e) {
-        if (e.startsWith("[FirebaseError: No document to update")) {
+        try {
             await setDoc(doc(db, COLLECTIONS.LOGS, userId), {
                 [documentType]: data
             });
-        } else {
-            console.log("LOG UPDATED WITH CREATING A LOG USER...");
+            console.log("LOG UPDATED...");
         }
-        console.error("FAILED To set LOG for TRANSACTIONS ->  ", e);
+        catch (e) {
+            console.error("FAILED To set LOG for tried once ->  ", e);
+        }
+        // if (e.startsWith("[FirebaseError: No document to update")) {
+        //     await setDoc(doc(db, COLLECTIONS.LOGS, userId), {
+        //         [documentType]: data
+        //     });
+        // } else {
+        //     console.log("LOG UPDATED WITH CREATING A LOG USER...");
+        // }
+
     }
 }
 
@@ -49,7 +58,7 @@ export async function updateCategoriesForUsers(userId, data, successCallback = (
         await setDoc(doc(db, COLLECTIONS.CATEGORIES, userId), {
             categories: savePayload
         });
-        updateDBLog(userId, COLLECTIONS.CATEGORIES, savePayload);
+        await updateDBLog(userId, COLLECTIONS.CATEGORIES, savePayload);
         successCallback();
         console.log("UPDATE CATEGORIES FOR USER SUCCESSFUL...");
     } catch (e) {
@@ -64,7 +73,7 @@ export async function updateTransactionsForUsers(userId, data, successCallback =
         await setDoc(doc(db, COLLECTIONS.TRANSACTIONS, userId), {
             transactions: data
         });
-        updateDBLog(userId, COLLECTIONS.TRANSACTIONS, data);
+        await updateDBLog(userId, COLLECTIONS.TRANSACTIONS, data);
         successCallback();
         console.log("UPDATE TRANSACTION FOR USER SUCCESSFUL...");
     } catch (e) {
@@ -102,7 +111,7 @@ export async function deleteTransaction(userId, deleteTransactionDateId, success
             await setDoc(doc(db, collectionName, documentId), {
                 [arrayFieldName]: dataArray
             });
-            updateDBLog(userId, COLLECTIONS.TRANSACTIONS, dataArray);
+            await updateDBLog(userId, COLLECTIONS.TRANSACTIONS, dataArray);
             successCallback();
             console.log("DELETE TRANSACTION FOR USER SUCCESSFUL...");
         } else {

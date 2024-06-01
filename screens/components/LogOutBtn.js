@@ -5,6 +5,7 @@ import { AntDesign } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../store/slice/appSlice';
 import { useNavigation } from '@react-navigation/native';
+import { setCategories, setTransactions } from '../store/slice/dbSlice';
 
 function LogOutBtn() {
     const dispatch = useDispatch();
@@ -12,7 +13,9 @@ function LogOutBtn() {
     return (
         <TouchableOpacity onPress={() => {
             logOutUser(auth).then(() => {
-                dispatch(setUser(null))
+                dispatch(setUser(null));
+                dispatch(setTransactions([]))
+                dispatch(setCategories([]))
                 navigation.reset({
                     index: 0,
                     routes: [{ name: "Login" }]

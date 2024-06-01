@@ -23,10 +23,26 @@ function AddCategories({ route }) {
     const [editCategoryModalShow, onChangeEditCategoryModalShow] = React.useState(false);
 
     function onChangeCategories(categories) {
-        dispatch(setCategories(categories));
+        onChangeShowLoading(true);
+        updateCategoriesForUsers(userId, categories, () => {
+            dispatch(setCategories(categories));
+            dispatch(updateTransactions())
+            onChangeShowLoading(false);
+        }, (err) => {
+            Alert.alert(err);
+            onChangeShowLoading(false);
+        });
+
     }
     function onChangeTransactions(transactions) {
-        dispatch(setTransactions(transactions));
+        onChangeShowLoading(true);
+        updateTransactionsForUsers(userId, transactions, () => {
+            dispatch(setTransactions(transactions));
+            onChangeShowLoading(false);
+        }, (err) => {
+            Alert.alert(err);
+            onChangeShowLoading(false);
+        })
     }
 
     function addNewCategoryHandler() {
@@ -35,7 +51,7 @@ function AddCategories({ route }) {
             return;
         }
         onChangeShowLoading(true);
-        let newCategories = [...categories];
+        let newCategories = JSON.parse(JSON.stringify(categories));
         newCategories.push({ id: newCategories.length + "", categoryName: addCategoryText, amountVisible: true })
         updateCategoriesForUsers(route.params.userId, newCategories, () => {
             dispatch(setCategories(newCategories));
@@ -46,7 +62,7 @@ function AddCategories({ route }) {
         });
     }
     function onCategoryMove(type, category, currentPosition) {
-        let _categories = [...categories];
+        let _categories = JSON.parse(JSON.stringify(categories));
         if (type == "up" && currentPosition > 0) {
             // currentPosition = parseInt(category.id);
             newPosition = currentPosition - 1;
@@ -129,7 +145,7 @@ function AddCategories({ route }) {
             onChangeCategories(_categories);
         }
         if (type == "delete") {
-            let _categories = [...categories];
+            let _categories = JSON.parse(JSON.stringify(categories));
             _categories = _categories.filter((data) => data.id != category.id);
             _categories.map((_category, index) => {
                 _category.id = index + "";
