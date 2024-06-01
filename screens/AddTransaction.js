@@ -1,16 +1,22 @@
 import { Dropdown } from 'react-native-element-dropdown';
 import React from 'react'
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { Spinner } from '@gluestack-ui/themed';
-import { updateCategoriesForUsers, updateTransactionsForUsers } from '../services/userService';
+import { updateTransactionsForUsers } from '../services/userService';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import Transaction from './components/Transaction';
+import { useDispatch, useSelector } from 'react-redux';
+import { setTransactions } from './store/slice/dbSlice';
 
 function AddTransaction({ route }) {
-    const [categories, onChangeCategories] = React.useState(route.params.categories);
-    const [categoriesList, onChangeCategoriesList] = React.useState(route.params.categories.map((data) => ({ label: data.categoryName, value: data.categoryName })));
-    const [transactions, onChangeTransactions] = React.useState(route.params.transactions ? route.params.transactions : []);
-    const [selectedCategory, onChangeSelectedCategory] = React.useState("");
+    const dispatch = useDispatch();
+    const userId = useSelector((state) => state.app.userId);
+    const categories = useSelector((state) => state.db.categories);
+    const transactions = useSelector((state) => state.db.transactions);
+
+    const [categoriesList, onChangeCategoriesList] = React.useState(categories.map((data) => ({ label: data.categoryName, value: data.categoryName })));
+    const [selectedCategory, onChangeSelectedCategory] = React.useState(route.params.selectedCategory ? route.params.selectedCategory : "");
     const [comment, onChangeComment] = React.useState("");
     const [amountTransaction, onChangeAmountTransaction] = React.useState(0);
     const [showLoading, onChangeShowLoading] = React.useState(false);
@@ -24,88 +30,71 @@ function AddTransaction({ route }) {
         let newTransaction = [...transactions];
         let transactionObj = { "category": selectedCategory, "date": new Date().toISOString(), "transactionAmount": amountTransaction, "type": amountTransaction > 0 ? "deposit" : "widthdraw", "comment": comment };
         newTransaction.unshift(transactionObj);
-        updateTransactionsForUsers(route.params.userId, newTransaction, () => {
-            onChangeTransactions(newTransaction);
-            route.params.onChangeTransactions(newTransaction);
-            let updatedCategories = [...categories].map(category => {
-                if (transactionObj.category === category.categoryName) {
-                    category.amountHold = parseFloat(category.amountHold) + parseFloat(transactionObj.transactionAmount);
-                }
-                return category;
-            });
-            updateCategoriesForUsers(route.params.userId, updatedCategories, () => {
-                route.params.onChangeCategories(updatedCategories);
-                onChangeAmountTransaction(0);
-                onChangeShowLoading(false);
-            })
+        updateTransactionsForUsers(userId, newTransaction, () => {
+            dispatch(setTransactions(newTransaction));
+            onChangeShowLoading(false);
+        }, (err) => {
+            Alert.alert(err);
         });
+
     }
     return (
-        <SafeAreaView className="bg-[#512B81] h-full">
-            <StatusBar
+        <SafeAreaView className="bg-[#fcfdff] h-full">
+            <StatusBar barStyle="dark-content"
                 animated={true}
-                backgroundColor="#D4ADFC"
+                backgroundColor="#fcfdff"
             />
-            <View className="my-2 px-2 " style={{}}>
-                <Dropdown
-                    style={styles.dropdown}
-                    placeholderStyle={styles.placeholderStyle}
-                    selectedTextStyle={styles.selectedTextStyle}
-                    inputSearchStyle={styles.inputSearchStyle}
-                    iconStyle={styles.iconStyle}
-                    data={categoriesList}
-                    search
-                    maxHeight={300}
-                    labelField="label"
-                    valueField="value"
-                    placeholder="Select Category"
-                    searchPlaceholder="Search..."
-                    value={selectedCategory}
-                    onChange={item => {
-                        onChangeSelectedCategory(item.value);
-                    }}
-
-                />
-
-
+            <View className="flex-row items-center gap-2 m-2">
+                <View className=" border-[#e6e8fd] border-2 rounded-full">
+                    <Dropdown
+                        style={styles.dropdown}
+                        placeholderStyle={styles.placeholderStyle}
+                        selectedTextStyle={styles.selectedTextStyle}
+                        iconStyle={styles.iconStyle}
+                        itemTextStyle={styles.itemTextStyle}
+                        data={categoriesList}
+                        maxHeight={200}
+                        labelField="label"
+                        valueField="value"
+                        placeholder="Select Category"
+                        searchPlaceholder="Search..."
+                        value={selectedCategory}
+                        onChange={item => {
+                            onChangeSelectedCategory(item.value);
+                        }}
+                    />
+                </View>
+                <View className="flex-1 h-[38] p-2 pl-4 font-semibold border-[#ffddc2] border-2 rounded-full">
+                    <TextInput
+                        onChangeText={onChangeAmountTransaction}
+                        value={amountTransaction + ""}
+                        placeholder="Enter Amount"
+                        keyboardType='numeric'
+                    />
+                </View>
             </View>
-            <View className="my-2 px-4 flex-row" >
-                <TextInput className="" style={{ height: 40, width: "100%", marginRight: 10, color: "skyblue", borderWidth: 1, borderColor: "white", borderRadius: 20, paddingStart: 20 }}
+            <View className="flex-row px-4 gap-1 items-center" >
+                <TextInput className="flex-1 pl-4 h-[40] font-semibold border-[#cbefef] border-2 rounded-full" style={{ width: 50 }}
                     onChangeText={onChangeComment}
                     value={comment}
                     placeholder="Enter Comment"
                 />
-            </View>
-            <View className="my-2 px-4 flex-row" >
-                <TextInput className="" style={{ height: 40, width: "85%", marginRight: 10, color: "skyblue", borderWidth: 1, borderColor: "white", borderRadius: 20, paddingStart: 20 }}
-                    onChangeText={onChangeAmountTransaction}
-                    value={amountTransaction}
-                    placeholder="Enter Amount"
-                    keyboardType='numeric'
-                />
-                <Pressable onPress={AddNewTransaction}>
-                    <View className="bg-[#F27BBD] p-2 rounded-2xl">
+                <TouchableOpacity onPress={AddNewTransaction}>
+                    <View className=" ">
                         <MaterialIcons name="currency-exchange" size={32} color="black" />
                     </View>
-                </Pressable>
-
+                </TouchableOpacity>
             </View>
-            < Text text30 className="text-[#4fd3ff] font-extrabold p-4" >Transactions</ Text>
+            <View className="px-2 mt-2">
+                < Text className="font-bold text-md"> Transactions </ Text>
+            </View>
             <ScrollView className="px-2">
                 {showLoading && <Spinner size="large" />}
-                {!showLoading && transactions.length == 0 && <Text style={{ height: 40, width: "100%", margin: 10, color: "orange" }}>No Transactions to Display. Please add A Transaction</Text>}
-                {transactions.map((transaction) => (
-                    <View key={transaction.date} className="bg-[#10439F] rounded-lg p-4 my-2 ">
-                        <Text className="bg-[#874CCC] rounded-lg p-2 text-center font-bold text-white">{transaction.category}</Text>
-                        <Text className="bg-[#C65BCF] rounded-lg p-2 m-2 text-center font-bold text-white">Amount: {transaction.transactionAmount}</Text>
-                        <Text className="bg-[#F27BBD] rounded-lg p-2 mx-4  text-center font-bold text-white">{transaction.comment}</Text>
-                        <Text className="bg-[#F27BBD] rounded-lg p-2 mx-8 my-2 text-center font-bold text-white">Date: {new Date(transaction.date).toLocaleString()}</Text>
-                    </View>
+                {!showLoading && transactions.length == 0 && <Text style={{ height: 40, width: "100%", margin: 10 }}>No Transactions to Display. Please add A Transaction</Text>}
+                {transactions.map((transaction, index) => (
+                    <Transaction key={index} index={index} transaction={transaction} />
                 ))}
-
             </ScrollView>
-
-
         </SafeAreaView>
     )
 }
@@ -114,27 +103,39 @@ export default AddTransaction;
 
 const styles = StyleSheet.create({
     dropdown: {
-        margin: 16,
-        height: 30,
-        width: "90%",
-        borderBottomColor: 'white',
-        borderBottomWidth: 0.5,
+        margin: 15,
+        height: 5,
+        width: 150,
+        borderRadius: 20,
+    },
+    itemTextStyle: {
+        fontWeight: 500,
+        color: "grey"
     },
     icon: {
-        marginRight: 5,
+        // marginRight: 5,
+        // borderRadius: 20
+
     },
     placeholderStyle: {
         fontSize: 16,
+        fontWeight: 500,
+        color: "grey"
+
     },
     selectedTextStyle: {
         fontSize: 16,
+        fontWeight: 500,
+
     },
     iconStyle: {
         width: 20,
         height: 20,
+
     },
     inputSearchStyle: {
         height: 40,
         fontSize: 16,
+        borderRadius: 20
     },
 });
