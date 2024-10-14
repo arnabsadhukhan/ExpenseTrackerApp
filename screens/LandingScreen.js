@@ -1,31 +1,39 @@
 import React, { useLayoutEffect } from 'react'
 import { Image, SafeAreaView, Text, View } from 'react-native'
 import loadingGif from '../assets/loading.gif'
-import { auth } from '../firebase'
+import { useDispatch } from 'react-redux';
 
 function LandingScreen({ navigation }) {
+    const dispatch = useDispatch();
+
     useLayoutEffect(() => {
         setTimeout(function () {
-            if (auth.currentUser) {
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: "Home" }]
-                })
-            } else {
+            // if (auth.currentUser) {
+            //     console.log("auth 2",auth);
+            //     // dispatch(setUser(auth.currentUser.uid));
+            //     navigation.reset({
+            //         index: 0,
+            //         routes: [{ name: "Home" }]
+            //     })
+            // } else {
+            //     console.log("auth 3",auth);
                 navigation.reset({
                     index: 0,
                     routes: [{ name: "Login" }]
                 })
-            }
-        }, 3000);
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: "Home" }]
-                })
-            }
-        })
+            // }
+        }, 1000);
+        // auth.onAuthStateChanged((user) => {
+        //     console.log("auth 4",auth);
+        //     if (user) {
+        //         console.log("auth 5",user);
+        //         // dispatch(setUser(user.uid));
+        //         navigation.reset({
+        //             index: 0,
+        //             routes: [{ name: "Home" }]
+        //         })
+        //     }
+        // })
 
 
     }, [])

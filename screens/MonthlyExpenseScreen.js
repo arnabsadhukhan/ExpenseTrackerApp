@@ -1,6 +1,6 @@
-import { AntDesign, Feather, FontAwesome6, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { AntDesign, Feather, FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DragList, { DragListRenderItemInfo } from 'react-native-draglist';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateExpensesForUsers } from '../services/userService';
@@ -30,6 +30,7 @@ export default function MonthlyExpenseScreen() {
     const [editItemCategoryAmountModalShow, setEditItemCategoryAmountModalShow] = useState(false)
     const [editIncomeAmount, setEditIncomeAmount] = useState(incomeAmount);
     const [showLoading, onChangeShowLoading] = React.useState(false);
+    const [reorderFlag, onChangeReorderFlag] = React.useState(false);
 
     function onCategorySelect(item) {
         setEditItemCategoryAmount(item.amount)
@@ -99,15 +100,15 @@ export default function MonthlyExpenseScreen() {
                 onPress={() => onCategorySelect(item)}
                 onPressIn={onDragStart}
                 onPressOut={onDragEnd}>
-                <View className="flex-row justify-between">
-                    <View className="flex-row ">
+                <View className="flex-row justify-between items-center">
+                    <View className="flex-row items-center">
                         <TouchableOpacity onPress={() => onDeleteCategory(item)}>
                             <MaterialIcons name="delete-outline" size={24} color="black" />
                         </TouchableOpacity>
 
                         <Text className="font-semibold ml-2">{item.label}</Text>
                     </View>
-                    <View className="flex-row ">
+                    <View className="flex-row items-center">
                         <Text className="font-semibold mr-4">{item.amount}₹</Text>
                         <TouchableOpacity onPress={() => updateExpense(item)}>
 
@@ -169,13 +170,16 @@ export default function MonthlyExpenseScreen() {
             </TouchableOpacity>
 
             <View className="h-[84%]">
-
-                <DragList
+                {reorderFlag ? (<DragList
                     data={data}
                     keyExtractor={keyExtractor}
                     onReordered={onReordered}
                     renderItem={renderItem}
-                />
+                />) : (<FlatList
+                    data={data}
+                    renderItem={renderItem}
+                    keyExtractor={keyExtractor}
+                />)}
             </View>
             <View className="flex-row w-full justify-between mx-2 p-2 absolute bottom-4" style={{ backgroundColor: "#cbefef" }}>
                 <View className="flex-row ">
@@ -277,6 +281,10 @@ export default function MonthlyExpenseScreen() {
                     </View>
                 </View>
             </Modal>
+            <TouchableOpacity className="absolute bottom-32 left-5 bg-orange-200 rounded-lg p-2" onPress={() => onChangeReorderFlag(!reorderFlag)}>
+                {reorderFlag ? (<MaterialCommunityIcons name="order-bool-ascending-variant" size={24} color="black" />) : (<MaterialCommunityIcons name="order-bool-ascending" size={24} color="black" />)}
+
+            </TouchableOpacity>
             <TouchableOpacity className="absolute bottom-20 left-5 bg-orange-200 rounded-lg p-2" onPress={() => setEditCategoryModalShow(true)}>
 
                 <FontAwesome6 name="add" size={24} color="black" />

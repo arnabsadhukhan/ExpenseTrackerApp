@@ -22,8 +22,8 @@ function LoginScreen({ navigation }) {
         if (userId) {
             dispatch(setUser(userId));
             setTimeout(function () {
-                if (userId && type == "login") {
-                    cacheData();
+                if (userId && (type == "login" || type == "auto-login")) {
+                    if (type == "login") cacheData();
                     getCategoriesForUsers(userId, (userCategories) => {
                         dispatch(setCategories(userCategories.categories));
                         getTransactionsForUsers(userId, (userTransactions) => {
@@ -141,6 +141,12 @@ function LoginScreen({ navigation }) {
     };
     useLayoutEffect(() => {
         fetchData();
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                onChangeShowLoading(true);
+                navigateToHome(user.uid, 'auto-login');
+            }
+        })
 
 
     }, [])

@@ -26,14 +26,6 @@ async function updateDBLog(userId, type, data) {
         catch (e) {
             console.error("FAILED To set LOG for tried once ->  ", e);
         }
-        // if (e.startsWith("[FirebaseError: No document to update")) {
-        //     await setDoc(doc(db, COLLECTIONS.LOGS, userId), {
-        //         [documentType]: data
-        //     });
-        // } else {
-        //     console.log("LOG UPDATED WITH CREATING A LOG USER...");
-        // }
-
     }
 }
 
@@ -63,7 +55,7 @@ export async function updateCategoriesForUsers(userId, data, successCallback = (
         await setDoc(doc(db, COLLECTIONS.CATEGORIES, userId), {
             categories: savePayload
         });
-        await updateDBLog(userId, COLLECTIONS.CATEGORIES, savePayload);
+        // await updateDBLog(userId, COLLECTIONS.CATEGORIES, savePayload);
         successCallback();
         console.log("UPDATE CATEGORIES FOR USER SUCCESSFUL...");
     } catch (e) {
@@ -77,7 +69,7 @@ export async function updateTransactionsForUsers(userId, data, successCallback =
         await setDoc(doc(db, COLLECTIONS.TRANSACTIONS, userId), {
             transactions: data
         });
-        await updateDBLog(userId, COLLECTIONS.TRANSACTIONS, data);
+        // await updateDBLog(userId, COLLECTIONS.TRANSACTIONS, data);
         successCallback();
         console.log("UPDATE TRANSACTION FOR USER SUCCESSFUL...");
     } catch (e) {
@@ -91,10 +83,8 @@ export async function updateExpensesForUsers(userId, data, successCallback = () 
     try {
         data.expenses = data.expenses.map((category, index) => { category.id = index; return category });
         let savePayload = data;
-        await setDoc(doc(db, COLLECTIONS.EXPENSELIST, userId), {
-            categories: savePayload
-        });
-        await updateDBLog(userId, COLLECTIONS.CATEGORIES, savePayload);
+        await setDoc(doc(db, COLLECTIONS.EXPENSELIST, userId), savePayload);
+        // await updateDBLog(userId, COLLECTIONS.CATEGORIES, savePayload);
         successCallback(savePayload);
         console.log("UPDATE EXPENSES FOR USER SUCCESSFUL...");
     } catch (e) {
@@ -130,7 +120,7 @@ export async function deleteTransaction(userId, deleteTransactionDateId, success
             await setDoc(doc(db, collectionName, documentId), {
                 [arrayFieldName]: dataArray
             });
-            await updateDBLog(userId, COLLECTIONS.TRANSACTIONS, dataArray);
+            // await updateDBLog(userId, COLLECTIONS.TRANSACTIONS, dataArray);
             successCallback();
             console.log("DELETE TRANSACTION FOR USER SUCCESSFUL...");
         } else {
@@ -191,6 +181,7 @@ export async function getExpenseListForUsers(userId, successCallback = () => { }
         if (docSnap.exists()) {
             userInfo = docSnap.data();
             successCallback(userInfo);
+            console.log(userInfo)
             console.log("GET EXPENSE LIST FOR USER SUCCESSFUL...");
         } else {
             console.error("FAILED TO GET EXPENSE LIST INFO ->  ");
