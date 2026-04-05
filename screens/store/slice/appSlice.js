@@ -1,10 +1,9 @@
-// exampleSlice.js
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
     userId: null,
-    categories: [],
-    transactions: []
+    username: 'User',
+    theme: 'dark'
 };
 
 const appSlice = createSlice({
@@ -14,9 +13,12 @@ const appSlice = createSlice({
         setUser: (state, action) => {
             state.userId = action.payload;
         },
-
+        setProfileInfo: (state, action) => {
+            state.username = action.payload.username || 'User';
+            state.theme = action.payload.theme || 'dark';
+        }
     },
 });
 
-export const { setUser } = appSlice.actions;
+export const { setUser, setProfileInfo } = appSlice.actions;
 export default appSlice.reducer;

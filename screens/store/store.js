@@ -7,8 +7,14 @@ const store = configureStore({
     reducer: {
         app: appReducer,
         db: dbReducer,
-        // Add more reducers as needed
     },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            serializableCheck: {
+                ignoredPaths: ['db.lastVisibleTransaction'],
+                ignoredActions: ['db/setTransactions', 'db/appendTransactions'],
+            },
+        }),
 });
 
 export default store;

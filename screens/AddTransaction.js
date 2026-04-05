@@ -1,141 +1,214 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-import React from 'react'
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { Spinner } from '@gluestack-ui/themed';
-import { updateTransactionsForUsers } from '../services/userService';
+import { useSelector, useDispatch } from 'react-redux';
 import { MaterialIcons } from '@expo/vector-icons';
-import { StatusBar } from 'expo-status-bar';
-import Transaction from './components/Transaction';
-import { useDispatch, useSelector } from 'react-redux';
-import { setTransactions } from './store/slice/dbSlice';
+import { useTheme } from '@react-navigation/native';
+import { addTransaction, getCategories } from '../services/userService';
+import { setCategories } from './store/slice/dbSlice';
 
-function AddTransaction({ route }) {
+export default function AddTransaction({ navigation }) {
+    const { colors } = useTheme();
     const dispatch = useDispatch();
     const userId = useSelector((state) => state.app.userId);
     const categories = useSelector((state) => state.db.categories);
-    const transactions = useSelector((state) => state.db.transactions);
 
-    const [categoriesList, onChangeCategoriesList] = React.useState(categories.map((data) => ({ label: data.categoryName, value: data.categoryName })));
-    const [selectedCategory, onChangeSelectedCategory] = React.useState(route.params.selectedCategory ? route.params.selectedCategory : "");
-    const [comment, onChangeComment] = React.useState("");
-    const [amountTransaction, onChangeAmountTransaction] = React.useState(0);
-    const [showLoading, onChangeShowLoading] = React.useState(false);
+    
+    const [selectedCategoryId, setSelectedCategoryId] = useState('');
+    const [amount, setAmount] = useState('');
+    const [comment, setComment] = useState('');
+    const [type, setType] = useState('withdraw'); // 'withdraw' (expense) or 'deposit' (income)
+    const [loading, setLoading] = useState(false);
 
-    function AddNewTransaction() {
-        if (!selectedCategory || !amountTransaction || !comment) {
-            Alert.alert("PLease Enter Category, Amount and Comment");
+    const categoriesList = categories.map(c => ({ label: c.categoryName, value: c.id }));
+
+    const handleSave = async () => {
+        if (!selectedCategoryId || !amount || parseFloat(amount) <= 0) {
+            Alert.alert("Validation", "Please provide a valid category and amount.");
             return;
         }
-        onChangeShowLoading(true);
-        let newTransaction = [...transactions];
-        let transactionObj = { "category": selectedCategory, "date": new Date().toISOString(), "transactionAmount": amountTransaction, "type": amountTransaction > 0 ? "deposit" : "widthdraw", "comment": comment };
-        newTransaction.unshift(transactionObj);
-        updateTransactionsForUsers(userId, newTransaction, () => {
-            dispatch(setTransactions(newTransaction));
-            onChangeShowLoading(false);
-        }, (err) => {
-            Alert.alert(err);
-        });
 
-    }
-    return (
-        <SafeAreaView className="bg-[#fcfdff] h-full">
-            <StatusBar barStyle="dark-content"
-                animated={true}
-                backgroundColor="#fcfdff"
-            />
-            <View className="flex-row items-center gap-2 m-2">
-                <View className=" border-[#e6e8fd] border-2 rounded-full">
-                    <Dropdown
-                        style={styles.dropdown}
-                        placeholderStyle={styles.placeholderStyle}
-                        selectedTextStyle={styles.selectedTextStyle}
-                        iconStyle={styles.iconStyle}
-                        itemTextStyle={styles.itemTextStyle}
-                        data={categoriesList}
-                        maxHeight={200}
-                        labelField="label"
-                        valueField="value"
-                        placeholder="Select Category"
-                        searchPlaceholder="Search..."
-                        value={selectedCategory}
-                        onChange={item => {
-                            onChangeSelectedCategory(item.value);
-                        }}
-                    />
-                </View>
-                <View className="flex-1 h-[38] p-2 pl-4 font-semibold border-[#ffddc2] border-2 rounded-full">
-                    <TextInput
-                        onChangeText={onChangeAmountTransaction}
-                        value={amountTransaction + ""}
-                        placeholder="Enter Amount"
-                        keyboardType='numeric'
-                    />
-                </View>
-            </View>
-            <View className="flex-row px-4 gap-1 items-center" >
-                <TextInput className="flex-1 pl-4 h-[40] font-semibold border-[#cbefef] border-2 rounded-full" style={{ width: 50 }}
-                    onChangeText={onChangeComment}
-                    value={comment}
-                    placeholder="Enter Comment"
-                />
-                <TouchableOpacity onPress={AddNewTransaction}>
-                    <View className=" ">
-                        <MaterialIcons name="currency-exchange" size={32} color="black" />
-                    </View>
+        setLoading(true);
+        try {
+            const transactionData = {
+                categoryId: selectedCategoryId,
+                transactionAmount: parseFloat(amount),
+                type: type,
+                comment: comment,
+            };
+
+            await addTransaction(userId, transactionData);
+            
+            // Re-fetch categories to sync the wallet balances
+            const updatedCategories = await getCategories(userId);
+            dispatch(setCategories(updatedCategories));
+
+            navigation.goBack();
+        } catch (error) {
+            Alert.alert("Error", "Could not save transaction.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (categories.length === 0) {
+        return (
+            <View style={[styles.container, styles.emptyContainer, { backgroundColor: colors.background }]}>
+                <MaterialIcons name="folder-off" size={48} color="#86868B" />
+                <Text style={styles.emptyText}>You must create a Category Wallet first before adding a transaction.</Text>
+                <TouchableOpacity 
+                    style={[styles.primaryBtn, { backgroundColor: colors.primary, marginTop: 20 }]}
+                    onPress={() => navigation.navigate('Manage Categories')}
+                >
+                    <Text style={styles.btnText}>Setup Categories</Text>
                 </TouchableOpacity>
             </View>
-            <View className="px-2 mt-2">
-                < Text className="font-bold text-md"> Transactions </ Text>
+        );
+    }
+
+    return (
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+            
+            <View style={[styles.typeSelector, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <TouchableOpacity 
+                    style={[styles.typeBtn, type === 'withdraw' && { backgroundColor: '#FF3B30' }]}
+                    onPress={() => setType('withdraw')}
+                >
+                    <Text style={[styles.typeText, type === 'withdraw' && styles.typeTextActive]}>Debit / Expense</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                    style={[styles.typeBtn, type === 'deposit' && { backgroundColor: '#34C759' }]}
+                    onPress={() => setType('deposit')}
+                >
+                    <Text style={[styles.typeText, type === 'deposit' && styles.typeTextActive]}>Credit / Income</Text>
+                </TouchableOpacity>
             </View>
-            <ScrollView className="px-2">
-                {showLoading && <Spinner size="large" />}
-                {!showLoading && transactions.length == 0 && <Text style={{ height: 40, width: "100%", margin: 10 }}>No Transactions to Display. Please add A Transaction</Text>}
-                {transactions.map((transaction, index) => (
-                    <Transaction key={index} index={index} transaction={transaction} />
-                ))}
-            </ScrollView>
-        </SafeAreaView>
-    )
+
+            <View style={styles.inputGroup}>
+                <Text style={styles.label}>AMOUNT (₹)</Text>
+                <TextInput 
+                    style={[styles.input, styles.amountInput, { backgroundColor: colors.card, borderColor: colors.border, color: type === 'deposit' ? '#34C759' : '#FF3B30' }]}
+                    keyboardType="numeric"
+                    value={amount}
+                    onChangeText={setAmount}
+                    placeholder="0.00"
+                    placeholderTextColor="#86868B"
+                />
+            </View>
+
+            <View style={styles.inputGroup}>
+                <Text style={styles.label}>CATEGORY WALLET</Text>
+                <Dropdown
+                    style={[styles.dropdown, { backgroundColor: colors.card, borderColor: colors.border }]}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={[styles.selectedTextStyle, { color: colors.text }]}
+                    data={categoriesList}
+                    maxHeight={300}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select Target Wallet"
+                    value={selectedCategoryId}
+                    onChange={item => setSelectedCategoryId(item.value)}
+                    activeColor={`${colors.primary}20`}
+                    containerStyle={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}
+                    itemTextStyle={{ color: colors.text }}
+                />
+            </View>
+
+            <View style={styles.inputGroup}>
+                <Text style={styles.label}>COMMENTS / DESCRIPTION</Text>
+                <TextInput 
+                    style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
+                    value={comment}
+                    onChangeText={setComment}
+                    placeholder="Enter context..."
+                    placeholderTextColor="#86868B"
+                />
+            </View>
+
+
+
+            <TouchableOpacity 
+                style={[styles.primaryBtn, { backgroundColor: colors.primary, marginTop: 10 }]} 
+                onPress={handleSave} 
+                disabled={loading}
+            >
+                {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.btnText}>Commit Transaction</Text>}
+            </TouchableOpacity>
+
+        </ScrollView>
+    );
 }
 
-export default AddTransaction;
-
 const styles = StyleSheet.create({
+    container: { flex: 1 },
+    emptyContainer: { justifyContent: 'center', alignItems: 'center', padding: 40 },
+    emptyText: { color: '#86868B', textAlign: 'center', marginTop: 20, fontSize: 16 },
+    content: { padding: 20 },
+    typeSelector: {
+        flexDirection: 'row',
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 25,
+        borderWidth: 1,
+    },
+    typeBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+    typeText: {
+        color: '#86868B',
+        fontWeight: '600',
+    },
+    typeTextActive: {
+        color: '#FFFFFF',
+    },
+    inputGroup: {
+        marginBottom: 20,
+    },
+    label: {
+        color: '#86868B',
+        fontSize: 12,
+        fontWeight: '600',
+        letterSpacing: 1,
+        marginBottom: 8,
+    },
+    input: {
+        borderWidth: 1,
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        height: 55,
+        fontSize: 16,
+    },
+    amountInput: {
+        fontSize: 24,
+        fontWeight: '800',
+    },
     dropdown: {
-        margin: 15,
-        height: 5,
-        width: 150,
-        borderRadius: 20,
-    },
-    itemTextStyle: {
-        fontWeight: 500,
-        color: "grey"
-    },
-    icon: {
-        // marginRight: 5,
-        // borderRadius: 20
-
+        borderWidth: 1,
+        borderRadius: 12,
+        height: 55,
+        paddingHorizontal: 15,
     },
     placeholderStyle: {
+        color: '#86868B',
         fontSize: 16,
-        fontWeight: 500,
-        color: "grey"
-
     },
     selectedTextStyle: {
         fontSize: 16,
-        fontWeight: 500,
-
     },
-    iconStyle: {
-        width: 20,
-        height: 20,
 
+    primaryBtn: {
+        height: 55,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    inputSearchStyle: {
-        height: 40,
+    btnText: {
+        color: '#FFFFFF',
+        fontWeight: '700',
         fontSize: 16,
-        borderRadius: 20
-    },
+    }
 });
