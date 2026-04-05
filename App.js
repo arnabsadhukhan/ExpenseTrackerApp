@@ -116,9 +116,12 @@ function AppNavigation() {
   );
 }
 
+import { StatusBar } from 'expo-status-bar';
+
 export default function App() {
   return (
     <Provider store={store}>
+      <StatusBar style="auto" />
       <AppNavigation />
     </Provider>
   )

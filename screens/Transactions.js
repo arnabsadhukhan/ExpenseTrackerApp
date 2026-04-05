@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator }
 import { useSelector } from 'react-redux';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { getRecentTransactions } from '../services/userService';
-import { useTheme } from '@react-navigation/native';
+import { useTheme, useFocusEffect } from '@react-navigation/native';
 
 export default function Transactions({ navigation, route }) {
     const { colors } = useTheme();
@@ -18,10 +18,12 @@ export default function Transactions({ navigation, route }) {
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
-    useEffect(() => {
-        navigation.setOptions({ title: categoryNameInput });
-        fetchInitial();
-    }, [filterCategoryId]);
+    useFocusEffect(
+        React.useCallback(() => {
+            navigation.setOptions({ title: categoryNameInput });
+            fetchInitial();
+        }, [filterCategoryId])
+    );
 
     const fetchInitial = async () => {
         setLoading(true);
@@ -53,7 +55,10 @@ export default function Transactions({ navigation, route }) {
         const dateString = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '';
 
         return (
-            <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <TouchableOpacity 
+                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+                onPress={() => navigation.navigate('Add Transactions', { transaction: item })}
+            >
                 <View style={styles.cardHeader}>
                     <View style={styles.catContainer}>
                         <MaterialIcons 
@@ -79,7 +84,7 @@ export default function Transactions({ navigation, route }) {
                         ))}
                     </View>
                 )}
-            </View>
+            </TouchableOpacity>
         );
     };
 

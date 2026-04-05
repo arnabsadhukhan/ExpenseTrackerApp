@@ -88,6 +88,47 @@ export async function deleteTransaction(userId, transactionId, categoryId, amoun
         throw error;
     }
 }
+export async function updateTransaction(userId, transactionId, oldTransaction, newTransactionData) {
+    try {
+        const transRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.TRANSACTIONS, transactionId);
+        const batch = writeBatch(db);
+
+        // 1. Revert Old Transaction's Effect on Balance
+        const oldCategoryRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.CATEGORIES, oldTransaction.categoryId);
+        const oldReversedChange = oldTransaction.type === 'deposit' ? -oldTransaction.transactionAmount : oldTransaction.transactionAmount;
+        
+        // 2. Apply New Transaction's Effect on Balance
+        const newCategoryRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.CATEGORIES, newTransactionData.categoryId);
+        const newChange = newTransactionData.type === 'deposit' ? newTransactionData.transactionAmount : -newTransactionData.transactionAmount;
+
+        if (oldTransaction.categoryId === newTransactionData.categoryId) {
+            // Same category: Update balance by the net delta
+            batch.update(oldCategoryRef, {
+                currentAmount: increment(oldReversedChange + newChange)
+            });
+        } else {
+            // Category changed: Revert old category, increment new category
+            batch.update(oldCategoryRef, {
+                currentAmount: increment(oldReversedChange)
+            });
+            batch.update(newCategoryRef, {
+                currentAmount: increment(newChange)
+            });
+        }
+
+        // 3. Update the transaction record itself
+        batch.update(transRef, {
+            ...newTransactionData,
+            updatedAt: Date.now()
+        });
+
+        await batch.commit();
+        return { id: transactionId, ...newTransactionData };
+    } catch (error) {
+        console.error("Error updating transaction:", error);
+        throw error;
+    }
+}
 
 export async function getRecentTransactions(userId, limitCount = 20, lastDocSnap = null, categoryIdFilter = null) {
     try {

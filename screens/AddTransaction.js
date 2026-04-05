@@ -1,26 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useSelector, useDispatch } from 'react-redux';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
-import { addTransaction, getCategories } from '../services/userService';
+import CustomDatePicker from './components/CustomDatePicker';
+import { addTransaction, updateTransaction, deleteTransaction, getCategories } from '../services/userService';
 import { setCategories } from './store/slice/dbSlice';
 
-export default function AddTransaction({ navigation }) {
+export default function AddTransaction({ navigation, route }) {
     const { colors } = useTheme();
     const dispatch = useDispatch();
     const userId = useSelector((state) => state.app.userId);
     const categories = useSelector((state) => state.db.categories);
 
-    
-    const [selectedCategoryId, setSelectedCategoryId] = useState('');
-    const [amount, setAmount] = useState('');
-    const [comment, setComment] = useState('');
-    const [type, setType] = useState('withdraw'); // 'withdraw' (expense) or 'deposit' (income)
+    // Check if we are in EDIT mode
+    const editItem = route.params?.transaction || null;
+    const isEdit = !!editItem;
+
+    const [selectedCategoryId, setSelectedCategoryId] = useState(editItem?.categoryId || '');
+    const [amount, setAmount] = useState(editItem?.transactionAmount?.toString() || '');
+    const [comment, setComment] = useState(editItem?.comment || '');
+    const [type, setType] = useState(editItem?.type || 'withdraw'); 
+    const [date, setDate] = useState(editItem?.createdAt ? new Date(editItem.createdAt) : new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        if (isEdit) {
+            navigation.setOptions({ title: 'Edit Transaction' });
+        }
+    }, [isEdit]);
+
     const categoriesList = categories.map(c => ({ label: c.categoryName, value: c.id }));
+
+    const onChangeDate = (event, selectedDate) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            setDate(selectedDate);
+        }
+    };
 
     const handleSave = async () => {
         if (!selectedCategoryId || !amount || parseFloat(amount) <= 0) {
@@ -35,17 +54,58 @@ export default function AddTransaction({ navigation }) {
                 transactionAmount: parseFloat(amount),
                 type: type,
                 comment: comment,
+                createdAt: date.getTime()
             };
 
-            await addTransaction(userId, transactionData);
+            if (isEdit) {
+                await updateTransaction(userId, editItem.id, editItem, transactionData);
+            } else {
+                await addTransaction(userId, transactionData);
+            }
             
-            // Re-fetch categories to sync the wallet balances
+            // Sync Category balances
             const updatedCategories = await getCategories(userId);
             dispatch(setCategories(updatedCategories));
 
             navigation.goBack();
         } catch (error) {
             Alert.alert("Error", "Could not save transaction.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = () => {
+        const title = "Delete Transaction";
+        const message = "Are you sure you want to remove this record? This will also revert the balance in your wallet.";
+
+        if (Platform.OS === 'web') {
+            // Standard web confirmation
+            const confirmed = window.confirm(`${title}\n\n${message}`);
+            if (confirmed) {
+                confirmDelete();
+            }
+        } else {
+            Alert.alert(
+                title,
+                message,
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: confirmDelete }
+                ]
+            );
+        }
+    };
+
+    const confirmDelete = async () => {
+        setLoading(true);
+        try {
+            await deleteTransaction(userId, editItem.id, editItem.categoryId, editItem.transactionAmount, editItem.type);
+            const updatedCategories = await getCategories(userId);
+            dispatch(setCategories(updatedCategories));
+            navigation.goBack();
+        } catch (e) {
+            Alert.alert("Error", "Failed to delete.");
         } finally {
             setLoading(false);
         }
@@ -116,6 +176,24 @@ export default function AddTransaction({ navigation }) {
             </View>
 
             <View style={styles.inputGroup}>
+                <Text style={styles.label}>DATE</Text>
+                <TouchableOpacity 
+                    style={[styles.input, styles.datePickerBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+                    onPress={() => setShowDatePicker(true)}
+                >
+                    <Text style={{ color: colors.text, fontSize: 16 }}>{date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                    <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
+                
+                {/* CustomDatePicker handles both platform-native and web behavior */}
+                <CustomDatePicker 
+                    show={showDatePicker}
+                    value={date}
+                    onChange={onChangeDate}
+                />
+            </View>
+
+            <View style={styles.inputGroup}>
                 <Text style={styles.label}>COMMENTS / DESCRIPTION</Text>
                 <TextInput 
                     style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
@@ -126,16 +204,25 @@ export default function AddTransaction({ navigation }) {
                 />
             </View>
 
-
-
             <TouchableOpacity 
                 style={[styles.primaryBtn, { backgroundColor: colors.primary, marginTop: 10 }]} 
                 onPress={handleSave} 
                 disabled={loading}
             >
-                {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.btnText}>Commit Transaction</Text>}
+                {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.btnText}>{isEdit ? 'Update Entry' : 'Commit Transaction'}</Text>}
             </TouchableOpacity>
 
+            {isEdit && (
+                <TouchableOpacity 
+                    style={[styles.outlineBtn, { borderColor: '#FF3B30', marginTop: 15 }]} 
+                    onPress={handleDelete}
+                    disabled={loading}
+                >
+                    <Text style={styles.deleteBtnText}>Delete Transaction</Text>
+                </TouchableOpacity>
+            )}
+
+            <View style={{ height: 40 }} />
         </ScrollView>
     );
 }
@@ -186,6 +273,11 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: '800',
     },
+    datePickerBtn: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
     dropdown: {
         borderWidth: 1,
         borderRadius: 12,
@@ -199,15 +291,26 @@ const styles = StyleSheet.create({
     selectedTextStyle: {
         fontSize: 16,
     },
-
     primaryBtn: {
         height: 55,
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
     },
+    outlineBtn: {
+        height: 55,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+    },
     btnText: {
         color: '#FFFFFF',
+        fontWeight: '700',
+        fontSize: 16,
+    },
+    deleteBtnText: {
+        color: '#FF3B30',
         fontWeight: '700',
         fontSize: 16,
     }
