@@ -33,16 +33,16 @@ Understand your spending patterns with beautiful, interactive charts. See where 
 <div align="center">
 
 ### 🟢 Dashboard & Home
-![Dashboard Home](file:///d:/Arnab/ExpenseTracker/ExpenseTrackerApp/Screenshots/Screenshot-1.jpg)
+![Dashboard Home](Screenshots/Screenshot-1.jpg)
 *High-level overview of your wealth and recent activities.*
 
 ---
 
 ### 💳 Transaction Management
 <p align="center">
-  <img src="file:///d:/Arnab/ExpenseTracker/ExpenseTrackerApp/Screenshots/Screenshot-2.jpg" width="30%" />
-  <img src="file:///d:/Arnab/ExpenseTracker/ExpenseTrackerApp/Screenshots/Screenshot-3.jpg" width="30%" />
-  <img src="file:///d:/Arnab/ExpenseTracker/ExpenseTrackerApp/Screenshots/Screenshot-4.jpg" width="30%" />
+  <img src="Screenshots/Screenshot-2.jpg" width="30%" />
+  <img src="Screenshots/Screenshot-3.jpg" width="30%" />
+  <img src="Screenshots/Screenshot-4.jpg" width="30%" />
 </p>
 *Effortless tracking, editing, and filtering of your financial records.*
 
@@ -50,8 +50,8 @@ Understand your spending patterns with beautiful, interactive charts. See where 
 
 ### 🤝 Advanced Lending Tracker
 <p align="center">
-  <img src="file:///d:/Arnab/ExpenseTracker/ExpenseTrackerApp/Screenshots/Screenshot-5.jpg" width="45%" />
-  <img src="file:///d:/Arnab/ExpenseTracker/ExpenseTrackerApp/Screenshots/Screenshot-6.jpg" width="45%" />
+  <img src="Screenshots/Screenshot-5.jpg" width="45%" />
+  <img src="Screenshots/Screenshot-6.jpg" width="45%" />
 </p>
 *Track partial recoveries, payment history, and pending balances in detail.*
 
@@ -59,9 +59,9 @@ Understand your spending patterns with beautiful, interactive charts. See where 
 
 ### 📈 Analysis & Insights
 <p align="center">
-  <img src="file:///d:/Arnab/ExpenseTracker/ExpenseTrackerApp/Screenshots/Screenshot-7.jpg" width="30%" />
-  <img src="file:///d:/Arnab/ExpenseTracker/ExpenseTrackerApp/Screenshots/Screenshot-8.jpg" width="30%" />
-  <img src="file:///d:/Arnab/ExpenseTracker/ExpenseTrackerApp/Screenshots/Screenshot-9.jpg" width="30%" />
+  <img src="Screenshots/Screenshot-7.jpg" width="30%" />
+  <img src="Screenshots/Screenshot-8.jpg" width="30%" />
+  <img src="Screenshots/Screenshot-9.jpg" width="30%" />
 </p>
 *Visual spending breakdowns and interactive charts.*
 
