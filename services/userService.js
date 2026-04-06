@@ -41,18 +41,22 @@ export async function addTransaction(userId, transactionData) {
     try {
         const transCollection = collection(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.TRANSACTIONS);
         const categoryRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.CATEGORIES, transactionData.categoryId);
-        
+
         const newDocRef = doc(transCollection);
-        
+
         // Calculate the increment amount based on debit/credit
         // Assuming deposit is positive, withdraw is negative for category wallet.
         const amountChange = transactionData.type === 'deposit' ? transactionData.transactionAmount : -transactionData.transactionAmount;
 
         const batch = writeBatch(db);
-        batch.set(newDocRef, {
+
+        // Ensure we preserve the createdAt if provided, otherwise use current time
+        const finalData = {
             ...transactionData,
-            createdAt: Date.now()
-        });
+            createdAt: transactionData.createdAt || Date.now()
+        };
+
+        batch.set(newDocRef, finalData);
 
         // Update the category's current amount in the same atomic batch
         batch.update(categoryRef, {
@@ -96,7 +100,7 @@ export async function updateTransaction(userId, transactionId, oldTransaction, n
         // 1. Revert Old Transaction's Effect on Balance
         const oldCategoryRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.CATEGORIES, oldTransaction.categoryId);
         const oldReversedChange = oldTransaction.type === 'deposit' ? -oldTransaction.transactionAmount : oldTransaction.transactionAmount;
-        
+
         // 2. Apply New Transaction's Effect on Balance
         const newCategoryRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.CATEGORIES, newTransactionData.categoryId);
         const newChange = newTransactionData.type === 'deposit' ? newTransactionData.transactionAmount : -newTransactionData.transactionAmount;
@@ -133,14 +137,13 @@ export async function updateTransaction(userId, transactionId, oldTransaction, n
 export async function getRecentTransactions(userId, limitCount = 20, lastDocSnap = null, categoryIdFilter = null) {
     try {
         const transCollection = collection(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.TRANSACTIONS);
-        
+
         let conditions = [];
-        
+
         if (categoryIdFilter) {
             conditions.push(where("categoryId", "==", categoryIdFilter));
-            // When filtering by a field, Firestore requires a composite index to also use orderBy.
-            // To avoid the developer needing to manually provision an index, we fetch without orderBy locally.
-            conditions.push(limit(100)); // Increase limit since we don't paginate as well without order
+            // Keep limit higher when no server-side order to ensure we see recent items
+            conditions.push(limit(5000));
         } else {
             conditions.push(orderBy("createdAt", "desc"));
             conditions.push(limit(limitCount));
@@ -151,7 +154,7 @@ export async function getRecentTransactions(userId, limitCount = 20, lastDocSnap
 
         const q = query(transCollection, ...conditions);
         const querySnapshot = await getDocs(q);
-        
+
         let transactions = [];
         let lastVisible = null;
         querySnapshot.forEach((doc) => {
@@ -159,7 +162,7 @@ export async function getRecentTransactions(userId, limitCount = 20, lastDocSnap
             lastVisible = doc;
         });
 
-        // Client side sort if filtered
+        // Client side sort if filtered to avoid index requirement
         if (categoryIdFilter) {
             transactions.sort((a, b) => b.createdAt - a.createdAt);
         }
@@ -187,13 +190,13 @@ export async function addCategory(userId, categoryData) {
 
 export async function updateCategory(userId, categoryId, updates) {
     try {
-         const docRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.CATEGORIES, categoryId);
-         await updateDoc(docRef, updates);
-    } catch (e) {}
+        const docRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.CATEGORIES, categoryId);
+        await updateDoc(docRef, updates);
+    } catch (e) { }
 }
 
 export async function deleteCategory(userId, categoryId) {
-     try {
+    try {
         const docRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.CATEGORIES, categoryId);
         await deleteDoc(docRef);
     } catch (e) {
@@ -212,14 +215,14 @@ export async function getCategories(userId) {
         });
         return categories;
     } catch (error) {
-         console.error("FAILED To GET categories ->  ", error);
-         throw error;
+        console.error("FAILED To GET categories ->  ", error);
+        throw error;
     }
 }
 
 // ----------------- LENDS -----------------
 export async function addLend(userId, lendData) {
-     try {
+    try {
         const colRef = collection(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.LENDS);
         const docRef = await addDoc(colRef, { ...lendData, createdAt: Date.now() });
         return { id: docRef.id, ...lendData, createdAt: Date.now() };
@@ -254,7 +257,7 @@ export async function setDataForUsers(userId, resolve) {
         // Just create profile metadata.
         const metadataRef = doc(db, COLLECTIONS.USER_ROOT, userId, COLLECTIONS.METADATA, 'migration');
         await setDoc(metadataRef, { migrated: true, migratedAt: Date.now() });
-        
+
         await updateUserProfile(userId, { username: 'New User', theme: 'dark' });
         resolve();
     } catch (e) {
@@ -283,7 +286,7 @@ export async function migrateOldDataIfNeeded(userId) {
         if (snap.exists() && snap.data().migrated) {
             return; // Already migrated
         }
-        
+
         // Mark as migrated to prevent future loops. In a real scenario we'd do the data porting here.
         await setDoc(metadataRef, { migrated: true, migratedAt: Date.now() });
     } catch (e) {
