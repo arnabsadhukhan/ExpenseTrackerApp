@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Provider, useSelector } from 'react-redux';
@@ -84,6 +84,22 @@ function AppNavigation() {
     headerShadowVisible: false,
   };
 
+  const getHeaderTitle = (route) => {
+    const routeName = getFocusedRouteNameFromRoute(route) ?? 'Dashboard';
+    switch (routeName) {
+      case 'Dashboard':
+        return 'Home';
+      case 'Categories':
+        return 'Manage Categories';
+      case 'Charts':
+        return 'Analysis';
+      case 'Lends':
+        return 'Lend Tracker';
+      default:
+        return routeName;
+    }
+  };
+
   return (
     <NavigationContainer theme={activeTheme}>
       <Stack.Navigator initialRouteName="Login">
@@ -95,9 +111,9 @@ function AppNavigation() {
         <Stack.Screen 
           name="Home" 
           component={MainTabs}
-          options={({ navigation }) => ({
+          options={({ navigation, route }) => ({
             ...globalHeaderConfig,
-            title: 'Home',
+            title: getHeaderTitle(route),
             headerLeft: () => null,
             headerRight: () => (
               <TouchableOpacity onPress={() => navigation.navigate('Profile Settings')} style={{ marginRight: 15 }}>

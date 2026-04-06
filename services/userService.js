@@ -142,14 +142,13 @@ export async function getRecentTransactions(userId, limitCount = 20, lastDocSnap
 
         if (categoryIdFilter) {
             conditions.push(where("categoryId", "==", categoryIdFilter));
-            // Keep limit higher when no server-side order to ensure we see recent items
-            conditions.push(limit(5000));
-        } else {
-            conditions.push(orderBy("createdAt", "desc"));
-            conditions.push(limit(limitCount));
-            if (lastDocSnap) {
-                conditions.push(startAfter(lastDocSnap));
-            }
+        }
+
+        conditions.push(orderBy("createdAt", "desc"));
+        conditions.push(limit(limitCount));
+
+        if (lastDocSnap) {
+            conditions.push(startAfter(lastDocSnap));
         }
 
         const q = query(transCollection, ...conditions);
@@ -162,12 +161,7 @@ export async function getRecentTransactions(userId, limitCount = 20, lastDocSnap
             lastVisible = doc;
         });
 
-        // Client side sort if filtered to avoid index requirement
-        if (categoryIdFilter) {
-            transactions.sort((a, b) => b.createdAt - a.createdAt);
-        }
-
-        return { transactions, lastVisible: categoryIdFilter ? null : lastVisible };
+        return { transactions, lastVisible };
     } catch (error) {
         console.error("FAILED To GET Recent Transactions ->  ", error);
         throw error;

@@ -11,6 +11,7 @@ export default function Transactions({ navigation, route }) {
     
     const filterCategoryId = route.params?.filterCategoryId || null;
     const categoryNameInput = route.params?.categoryName || 'History';
+    const PAGE_SIZE = 10; // Change to 100 later for production as requested
 
     const [transactions, setTransactions] = useState([]);
     const [lastVisible, setLastVisible] = useState(null);
@@ -28,10 +29,10 @@ export default function Transactions({ navigation, route }) {
     const fetchInitial = async () => {
         setLoading(true);
         try {
-            const res = await getRecentTransactions(userId, 20, null, filterCategoryId);
+            const res = await getRecentTransactions(userId, PAGE_SIZE, null, filterCategoryId);
             setTransactions(res.transactions);
             setLastVisible(res.lastVisible);
-            setHasMore(res.transactions.length >= 20);
+            setHasMore(res.transactions.length === PAGE_SIZE);
         } catch (e) {
             console.error(e);
         }
@@ -42,10 +43,10 @@ export default function Transactions({ navigation, route }) {
         if (loadingMore || !hasMore || !lastVisible) return;
         setLoadingMore(true);
         try {
-            const res = await getRecentTransactions(userId, 20, lastVisible, filterCategoryId);
+            const res = await getRecentTransactions(userId, PAGE_SIZE, lastVisible, filterCategoryId);
             setTransactions([...transactions, ...res.transactions]);
             setLastVisible(res.lastVisible);
-            setHasMore(res.transactions.length >= 20);
+            setHasMore(res.transactions.length === PAGE_SIZE);
         } catch (e) {}
         setLoadingMore(false);
     };
