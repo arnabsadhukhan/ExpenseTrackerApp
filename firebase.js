@@ -4,13 +4,13 @@ import { initializeAuth, getReactNativePersistence, createUserWithEmailAndPasswo
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCCuLknM6fabVIwRto0HZug8KdiFLtHq1g",
-    authDomain: "expensetracker-7b79a.firebaseapp.com",
-    projectId: "expensetracker-7b79a",
-    storageBucket: "expensetracker-7b79a.appspot.com",
-    messagingSenderId: "262215014041",
-    appId: "1:262215014041:web:ab8d202d6d171bf8260a08",
-    measurementId: "G-RL4BQB20PH"
+    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+    measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
