@@ -1,4 +1,4 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+   # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
 node_modules/
@@ -34,3 +34,9 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+prepared_migration.json
+prepare_migration.js
+perform_migration.js
+firebase.js
+export_data.js
+old_transaction.json

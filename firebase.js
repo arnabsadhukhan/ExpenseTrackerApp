@@ -1,7 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { initializeAuth, getReactNativePersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { 
+    initializeAuth, 
+    getReactNativePersistence, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut,
+    getAuth
+} from "firebase/auth";
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from "react-native";
 
 const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -15,9 +23,14 @@ const firebaseConfig = {
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
-export const auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-});
+
+// Initialize Auth with persistence based on platform
+export const auth = Platform.OS === 'web' 
+    ? getAuth(app) 
+    : initializeAuth(app, {
+        persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+    });
+
 export const db = getFirestore(app);
 export const createNewuser = createUserWithEmailAndPassword;
 export const loginUser = signInWithEmailAndPassword;
